@@ -119,7 +119,7 @@ You MUST follow this exact structure and formatting. The entire description MUST
 3. Chapters: Include a "⏱ Chapters" heading, followed by 5 realistic, chronological timestamps starting at "0:00", describing key moments.
 4. Engagement: Ask a specific question to the viewers and tell them to answer in the comments.
 5. Subscribe CTA: Tell the viewer to subscribe to "${videoData.channelTitle}" for more similar content.
-6. Hashtags: Add EXACTLY 3 highly relevant, trending hashtags at the very bottom. Do not add more than 3.
+6. Hashtags: Add 10 to 15 highly relevant, trending hashtags at the very bottom, perfectly tailored to the video topic.
 
 Return ONLY the final description text exactly as requested. Do not include markdown blocks or conversational text.`;
   } else if (type === 'title') {
@@ -219,7 +219,7 @@ You MUST follow this exact structure and formatting. The entire description MUST
 2. Chapters: Include a "⏱ Chapters" heading, followed by 5 realistic, chronological timestamps starting at "0:00", describing key moments. (Skip this if format is 'shorts').
 3. Engagement: Ask a specific question to the viewers and tell them to answer in the comments.
 4. Subscribe CTA: Tell the viewer to subscribe for more similar content.
-5. Hashtags: Add EXACTLY 3 highly relevant, trending hashtags at the very bottom. Do not add more than 3.
+5. Hashtags: Add 10 to 15 highly relevant, trending hashtags at the very bottom, perfectly tailored to the video topic.
 
 Return ONLY the final description text exactly as requested. Do not include markdown blocks or conversational text.`;
 

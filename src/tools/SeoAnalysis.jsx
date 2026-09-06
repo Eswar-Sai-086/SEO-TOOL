@@ -48,7 +48,7 @@ export default function SeoAnalysis() {
       const isHdVideo = videoData.contentDetails?.definition === 'hd';
       const isTitleOptimized = title.length >= 20 && title.length <= 70;
       const hashtags = desc.match(/#\w+/g) || [];
-      const isDescOptimized = desc.length >= 250 && hashtags.length >= 1 && hashtags.length <= 10;
+      const isDescOptimized = desc.length >= 250 && hashtags.length >= 1 && hashtags.length <= 15;
       const hasChapters = desc.includes('0:00') || desc.includes('00:00');
       const hasTags = snippet.tags && snippet.tags.length > 0;
 

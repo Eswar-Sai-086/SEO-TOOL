@@ -112,14 +112,14 @@ ${videoData.description || 'None provided'}
 """
 
 You MUST output the description in the EXACT language of the video title.
-You MUST follow this exact structure and formatting:
+You MUST follow this exact structure and formatting. The entire description MUST be at least 250 words long to pass SEO checks.
 
-1. Hook & Summary (2 paragraphs): Start with an engaging question related to the title. Explain what the viewer will learn in simple, exciting terms.
+1. Hook & Summary (2 paragraphs): Start with an engaging question related to the title. Explain what the viewer will learn in simple, exciting terms. Make this detailed.
 2. Preserved Links: You MUST extract and preserve ALL URLs/links from the original description (like WhatsApp, Instagram, or affiliate links). Keep them exactly as they were. Do not use placeholders. If there were no links in the original description, skip this section entirely.
 3. Chapters: Include a "⏱ Chapters" heading, followed by 5 realistic, chronological timestamps starting at "0:00", describing key moments.
 4. Engagement: Ask a specific question to the viewers and tell them to answer in the comments.
 5. Subscribe CTA: Tell the viewer to subscribe to "${videoData.channelTitle}" for more similar content.
-6. Hashtags: Add 5 to 10 highly relevant, trending hashtags at the very bottom.
+6. Hashtags: Add EXACTLY 3 highly relevant, trending hashtags at the very bottom. Do not add more than 3.
 
 Return ONLY the final description text exactly as requested. Do not include markdown blocks or conversational text.`;
   } else if (type === 'title') {
@@ -140,7 +140,7 @@ Return ONLY the final description text exactly as requested. Do not include mark
 - Return ONLY the timestamps format (e.g. 0:00 Chapter Title), no markdown blocks.`;
   } else if (type === 'tags') {
     prompt = `Generate a comma-separated list of 15 highly searched, long-tail YouTube tags/keywords for a video titled "${videoData.title}". 
-- You MUST output the tags in the EXACT SAME LANGUAGE as the original video title.
+- You MUST output the tags in English ONLY (translate concepts to English if necessary).
 - Include common misspellings.
 - Order from most relevant to broad.
 - Return ONLY the comma-separated list of tags, no markdown blocks.`;
@@ -213,13 +213,13 @@ export async function generateDescriptionFromTopic(topic, language, format) {
   const prompt = `You are a viral YouTube SEO expert. Write a highly optimized, high-converting YouTube description for a ${format} about: "${topic}".
   
 You MUST output the description in the EXACT language: ${language}.
-You MUST follow this exact structure and formatting:
+You MUST follow this exact structure and formatting. The entire description MUST be at least 250 words long to pass SEO checks.
 
-1. Hook & Summary (2 paragraphs): Start with an engaging question related to the topic. Explain what the viewer will learn in simple, exciting terms.
+1. Hook & Summary (2 paragraphs): Start with an engaging question related to the topic. Explain what the viewer will learn in simple, exciting terms. Make this detailed.
 2. Chapters: Include a "⏱ Chapters" heading, followed by 5 realistic, chronological timestamps starting at "0:00", describing key moments. (Skip this if format is 'shorts').
 3. Engagement: Ask a specific question to the viewers and tell them to answer in the comments.
 4. Subscribe CTA: Tell the viewer to subscribe for more similar content.
-5. Hashtags: Add 5 to 10 highly relevant, trending hashtags at the very bottom.
+5. Hashtags: Add EXACTLY 3 highly relevant, trending hashtags at the very bottom. Do not add more than 3.
 
 Return ONLY the final description text exactly as requested. Do not include markdown blocks or conversational text.`;
 

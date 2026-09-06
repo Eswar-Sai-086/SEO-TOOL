@@ -291,8 +291,8 @@ You MUST return the output EXACTLY in this format, with no other text:
       scriptText: scriptText || text
     };
   } catch (err) {
-    console.error(err);
-    throw new Error("Failed to generate script or parse response.");
+    console.error("Script generation error details:", err);
+    throw new Error(err.message || "Failed to generate script. The AI might have blocked the prompt for safety reasons or hit a quota limit.");
   }
 }
 

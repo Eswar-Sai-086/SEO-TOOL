@@ -223,9 +223,57 @@ You MUST follow this exact structure and formatting. The entire description MUST
 
 Return ONLY the final description text exactly as requested. Do not include markdown blocks or conversational text.`;
 
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
-  return response.text().trim();
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text().trim();
+  } catch (err) {
+    throw new Error("Failed to generate description.");
+  }
+}
+
+export async function generateScript(topic, language, format, duration, videoType) {
+  const { gemini } = getKeys();
+  if (!gemini || gemini === 'your_gemini_api_key_here') {
+    throw new Error("Gemini API Key is missing. Please add it in Settings.");
+  }
+  
+  const genAI = new GoogleGenerativeAI(gemini);
+  const modelName = await getAvailableModel(gemini);
+  const model = genAI.getGenerativeModel({ model: modelName });
+  
+  const prompt = `You are a viral YouTube scriptwriter. Write a highly engaging, fully structured video script for a ${format} about: "${topic}".
+- Duration target: ${duration}
+- Video Type/Tone: ${videoType}
+- Language: MUST be exactly ${language}.
+
+Format the script professionally with HOOK, INTRO, BODY SECTIONS, and CTA. Include visual cues like [B-ROLL: ...] or [TEXT ON SCREEN: ...].
+
+After writing the script, calculate these metrics based on your generated script:
+1. "characters": the total number of characters in the script (number).
+2. "readTime": an estimate of the read-aloud time (string, e.g., "~8.00 min").
+3. "sectionsCount": the number of distinct sections in the script (number, e.g., 5).
+4. "scriptText": the actual formatted script text.
+
+Return the results STRICTLY as a JSON object with no markdown code blocks outside of the JSON. The JSON schema must be:
+{
+  "characters": number,
+  "readTime": string,
+  "sectionsCount": number,
+  "scriptText": string
+}`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    let text = response.text();
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) text = jsonMatch[0];
+    return JSON.parse(text);
+  } catch (err) {
+    console.error(err);
+    throw new Error("Failed to generate script or parse response.");
+  }
 }
 
 export async function getAvailableModel(geminiKey) {

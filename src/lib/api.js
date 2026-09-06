@@ -250,26 +250,46 @@ export async function generateScript(topic, language, format, duration, videoTyp
 Format the script professionally with HOOK, INTRO, BODY SECTIONS, and CTA. Include visual cues like [B-ROLL: ...] or [TEXT ON SCREEN: ...].
 
 After writing the script, calculate these metrics based on your generated script:
-1. "characters": the total number of characters in the script (number).
-2. "readTime": an estimate of the read-aloud time (string, e.g., "~8.00 min").
-3. "sectionsCount": the number of distinct sections in the script (number, e.g., 5).
-4. "scriptText": the actual formatted script text.
+1. characters: the total number of characters in the script.
+2. readTime: an estimate of the read-aloud time (e.g., "~8.00 min").
+3. sectionsCount: the number of distinct sections in the script.
 
-Return the results STRICTLY as a JSON object with no markdown code blocks outside of the JSON. The JSON schema must be:
-{
-  "characters": number,
-  "readTime": string,
-  "sectionsCount": number,
-  "scriptText": string
-}`;
+You MUST return the output EXACTLY in this format, with no other text:
+
+===CHARACTERS===
+[number here]
+===READ_TIME===
+[time string here]
+===SECTIONS===
+[number here]
+===SCRIPT===
+[Full script text here]`;
 
   try {
     const result = await model.generateContent(prompt);
     const response = await result.response;
     let text = response.text();
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) text = jsonMatch[0];
-    return JSON.parse(text);
+    
+    // Parse the delimited format
+    const extract = (key, nextKey) => {
+      const start = text.indexOf(key);
+      if (start === -1) return '';
+      const end = nextKey ? text.indexOf(nextKey) : text.length;
+      if (end === -1) return '';
+      return text.substring(start + key.length, end).trim();
+    };
+
+    const charactersStr = extract('===CHARACTERS===', '===READ_TIME===');
+    const readTime = extract('===READ_TIME===', '===SECTIONS===');
+    const sectionsCountStr = extract('===SECTIONS===', '===SCRIPT===');
+    const scriptText = extract('===SCRIPT===', null);
+
+    return {
+      characters: parseInt(charactersStr.replace(/,/g, '')) || 0,
+      readTime: readTime || '~0.00 min',
+      sectionsCount: parseInt(sectionsCountStr) || 0,
+      scriptText: scriptText || text
+    };
   } catch (err) {
     console.error(err);
     throw new Error("Failed to generate script or parse response.");

@@ -396,3 +396,94 @@ export async function analyzeVideoSEO(title, description, tags) {
     throw new Error(`Gemini Error: ${err.message || 'Failed to parse JSON'}`);
   }
 }
+
+export async function generateBestTimeToPost({ countries, mostlyOneCountry, timeZone, niche, contentType, frequency, persona, images }) {
+  const keys = getKeys();
+  if (!keys.gemini) {
+    throw new Error("Gemini API Key is missing. Please add it in Settings.");
+  }
+  
+  const genAI = new GoogleGenerativeAI(keys.gemini);
+  const modelName = await getAvailableModel(keys.gemini);
+  const model = genAI.getGenerativeModel({ model: modelName });
+
+  const countryInfo = countries.map(c => `${c.percentage}% from ${c.name}`).join(', ');
+
+  const prompt = `You are a YouTube analytics and strategy expert.
+Based on the following audience profile, suggest a personalized weekly posting schedule:
+- Audience Locations: ${countryInfo} (Mostly one country: ${mostlyOneCountry})
+- Creator Time Zone: ${timeZone}
+- Niche: ${niche}
+- Content Type: ${contentType}
+- Posting Frequency: ${frequency}
+- Primary Audience Persona: ${persona}
+
+Calculate the best times for this creator to publish in THEIR time zone (${timeZone}) so that it hits the audience's peak active hours (taking into account the audience's local times and persona habits, e.g., students vs working professionals).
+
+Return the schedule EXACTLY in this format with no extra markdown:
+
+===SCHEDULE===
+[Day 1]: [Time range] - [Brief reason]
+[Day 2]: [Time range] - [Brief reason]
+===ADVICE===
+[1 paragraph of strategic advice based on their niche and frequency]
+
+(Note: If frequency is 2/week, provide 2 recommended days in the SCHEDULE block, etc.)`;
+
+  let parts = [{ text: prompt }];
+
+  // If there are images (graphs), we could attach them if the model supports vision, but for safety with arbitrary base64 strings, we'll just skip sending images or send them properly if we must.
+  // Gemini 1.5 flash supports base64 inline data.
+  if (images && images.length > 0) {
+    for (const img of images) {
+      // img is a data URL like "data:image/png;base64,iVBORw0KGgo..."
+      const split = img.split(',');
+      if (split.length === 2) {
+        const mime = split[0].match(/:(.*?);/)[1];
+        const data = split[1];
+        parts.push({
+          inlineData: {
+            data: data,
+            mimeType: mime
+          }
+        });
+      }
+    }
+  }
+
+  try {
+    const result = await model.generateContent(parts);
+    const response = await result.response;
+    const text = response.text();
+    
+    const extract = (key, nextKey) => {
+      const start = text.indexOf(key);
+      if (start === -1) return '';
+      const end = nextKey ? text.indexOf(nextKey) : text.length;
+      if (end === -1) return '';
+      return text.substring(start + key.length, end).trim();
+    };
+
+    const scheduleText = extract('===SCHEDULE===', '===ADVICE===');
+    const adviceText = extract('===ADVICE===', null);
+
+    const scheduleLines = scheduleText.split('\n').filter(l => l.trim().length > 0);
+    const parsedSchedule = scheduleLines.map(line => {
+      const splitDay = line.split(':');
+      const day = splitDay[0].trim();
+      const rest = splitDay.slice(1).join(':').trim();
+      const splitTime = rest.split('-');
+      const time = splitTime[0]?.trim() || '';
+      const reason = splitTime.slice(1).join('-').trim() || '';
+      return { day, time, reason };
+    });
+
+    return {
+      schedule: parsedSchedule.length > 0 ? parsedSchedule : [{ day: 'Optimal Days', time: 'Based on frequency', reason: scheduleText }],
+      advice: adviceText || "Try testing different times and monitoring your real-time analytics to refine this schedule."
+    };
+  } catch (err) {
+    console.error("BestTimeToPost error details:", err);
+    throw new Error(err.message || "Failed to generate schedule.");
+  }
+}

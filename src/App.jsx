@@ -13,6 +13,7 @@ import ChannelDetails from './tools/ChannelDetails';
 import TitleGenerator from './tools/TitleGenerator';
 import DescriptionWriter from './tools/DescriptionWriter';
 import ScriptBuilder from './tools/ScriptBuilder';
+import BestTimeToPost from './tools/BestTimeToPost';
 import Settings from './pages/Settings';
 
 function App() {
@@ -125,6 +126,7 @@ function App() {
           <Route path="/title-generator" element={<TitleGenerator />} />
           <Route path="/description-writer" element={<DescriptionWriter />} />
           <Route path="/script-builder" element={<ScriptBuilder />} />
+          <Route path="/best-time" element={<BestTimeToPost />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={
             <div style={{ padding: '0 48px' }}>

@@ -410,33 +410,51 @@ export async function generateBestTimeToPost({ countries, mostlyOneCountry, time
   const countryInfo = countries.map(c => `${c.percentage}% from ${c.name}`).join(', ');
 
   const prompt = `You are a YouTube analytics and strategy expert.
-Based on the following audience profile, suggest a personalized weekly posting schedule:
-- Audience Locations: ${countryInfo} (Mostly one country: ${mostlyOneCountry})
+Based on the following audience profile, suggest a highly specific personalized weekly posting schedule:
+- Audience Locations: ${countryInfo}
 - Creator Time Zone: ${timeZone}
 - Niche: ${niche}
 - Content Type: ${contentType}
 - Posting Frequency: ${frequency}
 - Primary Audience Persona: ${persona}
 
-Calculate the best times for this creator to publish in THEIR time zone (${timeZone}) so that it hits the audience's peak active hours (taking into account the audience's local times and persona habits, e.g., students vs working professionals).
+Calculate the best times for this creator to publish in THEIR time zone (${timeZone}) so that it hits the audience's peak active hours (taking into account the audience's local times and persona habits).
 
-Return the schedule EXACTLY in this format with no extra markdown:
+You MUST return the output EXACTLY in this format, with no extra markdown:
 
+===STRONGEST_DAY===
+[e.g. Wednesday - your strongest posting day this week]
+===BEST_TIME===
+[e.g. 20:15]
+===PEAK_WINDOW===
+[e.g. 19:30-22:00]
+===PUBLISH_TODAY_AT===
+[e.g. 20:15]
+===PUBLISH_ADVICE===
+[e.g. 45 min before peak - Coordinate posting with a short pre-release teaser...]
+===PEAK_ADVICE===
+[e.g. Highest audience activity - evening unwind for students & professionals]
+===SECONDARY_SLOT===
+[e.g. 21:15 - 23:15]
+===SECONDARY_ADVICE===
+[e.g. Morning commute window - strong secondary engagement]
+===AVOID_SLOT===
+[e.g. 12:00 - 15:00]
+===AVOID_ADVICE===
+[e.g. Low engagement midday - audience is at work or in class]
 ===SCHEDULE===
-[Day 1]: [Time range] - [Brief reason]
-[Day 2]: [Time range] - [Brief reason]
-===ADVICE===
-[1 paragraph of strategic advice based on their niche and frequency]
-
-(Note: If frequency is 2/week, provide 2 recommended days in the SCHEDULE block, etc.)`;
+Monday: [Time range] - [Brief reason]
+Tuesday: [Time range] - [Brief reason]
+Wednesday: [Time range] - [Brief reason]
+Thursday: [Time range] - [Brief reason]
+Friday: [Time range] - [Brief reason]
+Saturday: [Time range] - [Brief reason]
+Sunday: [Time range] - [Brief reason]`;
 
   let parts = [{ text: prompt }];
 
-  // If there are images (graphs), we could attach them if the model supports vision, but for safety with arbitrary base64 strings, we'll just skip sending images or send them properly if we must.
-  // Gemini 1.5 flash supports base64 inline data.
   if (images && images.length > 0) {
     for (const img of images) {
-      // img is a data URL like "data:image/png;base64,iVBORw0KGgo..."
       const split = img.split(',');
       if (split.length === 2) {
         const mime = split[0].match(/:(.*?);/)[1];
@@ -464,10 +482,8 @@ Return the schedule EXACTLY in this format with no extra markdown:
       return text.substring(start + key.length, end).trim();
     };
 
-    const scheduleText = extract('===SCHEDULE===', '===ADVICE===');
-    const adviceText = extract('===ADVICE===', null);
-
-    const scheduleLines = scheduleText.split('\n').filter(l => l.trim().length > 0);
+    const scheduleText = extract('===SCHEDULE===', null);
+    const scheduleLines = scheduleText.split('\n').filter(l => l.includes(':'));
     const parsedSchedule = scheduleLines.map(line => {
       const splitDay = line.split(':');
       const day = splitDay[0].trim();
@@ -479,8 +495,17 @@ Return the schedule EXACTLY in this format with no extra markdown:
     });
 
     return {
-      schedule: parsedSchedule.length > 0 ? parsedSchedule : [{ day: 'Optimal Days', time: 'Based on frequency', reason: scheduleText }],
-      advice: adviceText || "Try testing different times and monitoring your real-time analytics to refine this schedule."
+      strongestDay: extract('===STRONGEST_DAY===', '===BEST_TIME==='),
+      bestTime: extract('===BEST_TIME===', '===PEAK_WINDOW==='),
+      peakWindow: extract('===PEAK_WINDOW===', '===PUBLISH_TODAY_AT==='),
+      publishTodayAt: extract('===PUBLISH_TODAY_AT===', '===PUBLISH_ADVICE==='),
+      publishAdvice: extract('===PUBLISH_ADVICE===', '===PEAK_ADVICE==='),
+      peakAdvice: extract('===PEAK_ADVICE===', '===SECONDARY_SLOT==='),
+      secondarySlot: extract('===SECONDARY_SLOT===', '===SECONDARY_ADVICE==='),
+      secondaryAdvice: extract('===SECONDARY_ADVICE===', '===AVOID_SLOT==='),
+      avoidSlot: extract('===AVOID_SLOT===', '===AVOID_ADVICE==='),
+      avoidAdvice: extract('===AVOID_ADVICE===', '===SCHEDULE==='),
+      schedule: parsedSchedule.length > 0 ? parsedSchedule : [{ day: 'Optimal Days', time: 'Based on frequency', reason: 'Analytics pending.' }]
     };
   } catch (err) {
     console.error("BestTimeToPost error details:", err);

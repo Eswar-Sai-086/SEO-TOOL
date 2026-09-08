@@ -46,7 +46,7 @@ export default function SeoAnalysis() {
       
       const hasHdThumbnail = !!(snippet.thumbnails?.maxres || snippet.thumbnails?.high);
       const isHdVideo = videoData.contentDetails?.definition === 'hd';
-      const isTitleOptimized = title.length >= 20 && title.length <= 70;
+      const isTitleOptimized = title.length >= 100 && title.length <= 170;
       const hashtags = desc.match(/#\w+/g) || [];
       const isDescOptimized = desc.length >= 250 && hashtags.length >= 1 && hashtags.length <= 15;
       const hasChapters = desc.includes('0:00') || desc.includes('00:00');
@@ -232,7 +232,7 @@ export default function SeoAnalysis() {
               </div>
               <div>
                 <CheckItem id="desc" title="Description optimized" passed={results.checks.isDescOptimized} highImpact={true} feedback="Use 1-10 relevant hashtags — the first 3 show above your title. Past 15, YouTube ignores all of them." successMsg="Description looks good." buttonText="Rewrite description" />
-                <CheckItem id="title" title="Title optimized" passed={results.checks.isTitleOptimized} highImpact={true} feedback="Aim for 20-70 characters with the hook up front and minimal caps." successMsg="Length in range and readable." buttonText="Write better titles" />
+                <CheckItem id="title" title="Title optimized" passed={results.checks.isTitleOptimized} highImpact={true} feedback="Aim for 100-170 characters with the hook up front and minimal caps." successMsg="Length in range and readable." buttonText="Write better titles" />
                 <CheckItem id="tags" title="Tags added" passed={results.checks.hasTags} highImpact={false} feedback="Add a handful of tags. They barely affect ranking, but they cover misspellings for free." successMsg="Tags detected." buttonText="Suggest tags" />
                 <CheckItem id="thumbnail" title="Custom HD thumbnail" passed={results.checks.hasHdThumbnail} highImpact={false} feedback="Upload a custom thumbnail in 1280x720 resolution." successMsg="Custom thumbnail detected. Want to know if it earns the click?" buttonText="Upload thumbnail" />
                 <CheckItem id="hd" title="HD video quality" passed={results.checks.isHdVideo} highImpact={false} feedback="Upload in 1080p or higher." successMsg="Uploaded in HD — clear video keeps viewers around." />

@@ -117,7 +117,7 @@ export default function SeoAnalysis() {
         {!passed && generatedContent[id] && (
           <div style={{ marginTop: '16px', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: '#f9fafb', borderBottom: '1px solid var(--border-color)' }}>
-              <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1px', color: 'var(--text-muted)' }}>GENERATED {title.split(' ')[0].toUpperCase()}</span>
+              <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1px', color: 'var(--text-muted)' }}>{title.split(' ')[0].toUpperCase()}</span>
               <button style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#3b82f6', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => navigator.clipboard.writeText(generatedContent[id].split('|||')[0].trim())}>
                 <Copy size={14} /> copy
               </button>
@@ -209,6 +209,7 @@ export default function SeoAnalysis() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: 'var(--text-muted)', fontSize: '12px', fontWeight: 500 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Eye size={14} /> Views {formatNumber(results.videoData.statistics.viewCount)}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><ThumbsUp size={14} /> Likes {formatNumber(results.videoData.statistics.likeCount)}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><MessageSquare size={14} /> Comments {formatNumber(results.videoData.statistics.commentCount || 0)}</div>
                   </div>
                 </div>
               </div>
@@ -231,12 +232,21 @@ export default function SeoAnalysis() {
                 <div style={{ backgroundColor: '#f3f4f6', padding: '4px 12px', borderRadius: '16px', fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>{results.passedCount}/{results.totalChecks} passed</div>
               </div>
               <div>
-                <CheckItem id="desc" title="Description optimized" passed={results.checks.isDescOptimized} highImpact={true} feedback="Use 1-10 relevant hashtags — the first 3 show above your title. Past 15, YouTube ignores all of them." successMsg="Description looks good." buttonText="Rewrite description" />
-                <CheckItem id="title" title="Title optimized" passed={results.checks.isTitleOptimized} highImpact={true} feedback="Aim for 85-100 characters with the hook up front and minimal caps." successMsg="Length in range and readable." buttonText="Write better titles" />
-                <CheckItem id="tags" title="Tags added" passed={results.checks.hasTags} highImpact={false} feedback="Add a handful of tags. They barely affect ranking, but they cover misspellings for free." successMsg="Tags detected." buttonText="Suggest tags" />
-                <CheckItem id="thumbnail" title="Custom HD thumbnail" passed={results.checks.hasHdThumbnail} highImpact={false} feedback="Upload a custom thumbnail in 1280x720 resolution." successMsg="Custom thumbnail detected. Want to know if it earns the click?" buttonText="Upload thumbnail" />
-                <CheckItem id="hd" title="HD video quality" passed={results.checks.isHdVideo} highImpact={false} feedback="Upload in 1080p or higher." successMsg="Uploaded in HD — clear video keeps viewers around." />
-                <CheckItem id="chapters" title="Timestamp chapters" passed={results.checks.hasChapters} highImpact={false} feedback="Add chapters starting at 0:00 to unlock Key Moments." successMsg="Chapters detected — Key Moments on Google and easier navigation are unlocked." buttonText="Generate chapters" />
+                {[
+                  { id: "title", title: "Title optimized", passed: results.checks.isTitleOptimized, highImpact: true, feedback: "Aim for 85-100 characters with the hook up front and minimal caps.", successMsg: "Length in range and readable.", buttonText: "Write better titles" },
+                  { id: "desc", title: "Description optimized", passed: results.checks.isDescOptimized, highImpact: true, feedback: "Use 1-10 relevant hashtags — the first 3 show above your title. Past 15, YouTube ignores all of them.", successMsg: "Description looks good — keyword placement, hashtags and engagement are all in range.", buttonText: "Rewrite description" },
+                  { id: "chapters", title: "Timestamp chapters", passed: results.checks.hasChapters, highImpact: false, feedback: "Add chapters starting at 0:00 (3 or more, 10s+ each) to unlock Key Moments on Google and make long videos easy to watch.", successMsg: "Chapters detected — Key Moments on Google and easier navigation are unlocked.", buttonText: "Generate chapters" },
+                  { id: "thumbnail", title: "Custom HD thumbnail", passed: results.checks.hasHdThumbnail, highImpact: false, feedback: "Upload a custom thumbnail in 1280x720 resolution.", successMsg: "Custom thumbnail detected. Want to know if it earns the click?", buttonText: "Upload thumbnail" },
+                  { id: "hd", title: "HD video quality", passed: results.checks.isHdVideo, highImpact: false, feedback: "Upload in 1080p or higher.", successMsg: "Uploaded in HD — clear video keeps viewers around." },
+                  { id: "tags", title: "Tags added", passed: results.checks.hasTags, highImpact: false, feedback: "Add a handful of tags. They barely affect ranking, but they cover misspellings for free.", successMsg: "Tags barely affect ranking now — 30 seconds here is plenty. They mainly cover misspellings.", buttonText: "Suggest tags" }
+                ].sort((a, b) => {
+                  if (a.passed === b.passed) {
+                    return a.highImpact === b.highImpact ? 0 : a.highImpact ? -1 : 1;
+                  }
+                  return a.passed ? 1 : -1;
+                }).map(item => (
+                  <CheckItem key={item.id} {...item} />
+                ))}
               </div>
             </div>
           </div>

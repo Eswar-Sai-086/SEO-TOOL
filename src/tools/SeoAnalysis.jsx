@@ -46,7 +46,7 @@ export default function SeoAnalysis() {
       
       const hasHdThumbnail = !!(snippet.thumbnails?.maxres || snippet.thumbnails?.high);
       const isHdVideo = videoData.contentDetails?.definition === 'hd';
-      const isTitleOptimized = title.length >= 85 && title.length <= 100;
+      const isTitleOptimized = title.length >= 65 && title.length <= 100;
       const hashtags = desc.match(/#\w+/g) || [];
       const isDescOptimized = desc.length >= 250 && hashtags.length >= 1 && hashtags.length <= 15;
       const hasChapters = desc.includes('0:00') || desc.includes('00:00');

@@ -39,8 +39,9 @@ function App() {
             <Search size={18} /> Keyword Generator
           </NavLink>
           
-          <NavLink to="/trending" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-            <Flame size={18} /> Trending Video Ideas
+          <NavLink to="/trending" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Flame size={18} /> Trending Video Ideas</div>
+            <span style={{ backgroundColor: '#f97316', color: 'white', fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>Hot</span>
           </NavLink>
           
           <NavLink to="/seo-analysis" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
@@ -65,12 +66,14 @@ function App() {
             <Clapperboard size={18} /> Script Builder
           </NavLink>
           
-          <NavLink to="/community-post" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-            <Megaphone size={18} /> Community Post Generator
+          <NavLink to="/community-post" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Megaphone size={18} /> Community Post Generator</div>
+            <span style={{ backgroundColor: '#10b981', color: 'white', fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>New</span>
           </NavLink>
           
-          <NavLink to="/viral-hook" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-            <Magnet size={18} /> Viral Hook Writer
+          <NavLink to="/viral-hook" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Magnet size={18} /> Viral Hook Writer</div>
+            <span style={{ backgroundColor: '#10b981', color: 'white', fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>New</span>
           </NavLink>
 
           <NavLink to="/viral-ideas" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
@@ -83,12 +86,14 @@ function App() {
 
           <div className="nav-section-title" style={{ marginTop: '8px' }}>OPTIMIZE & GROW</div>
 
-          <NavLink to="/channel-report" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-            <BarChart2 size={18} /> Channel Report
+          <NavLink to="/channel-report" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><BarChart2 size={18} /> Channel Report</div>
+            <span style={{ backgroundColor: '#10b981', color: 'white', fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>New</span>
           </NavLink>
           
-          <NavLink to="/thumbnail-maker" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-            <ImageIcon size={18} /> Thumbnail Maker
+          <NavLink to="/thumbnail-maker" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><ImageIcon size={18} /> Thumbnail Maker</div>
+            <span style={{ backgroundColor: '#f59e0b', color: 'white', fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>Creator+</span>
           </NavLink>
           
           <NavLink to="/thumbnail-score" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>

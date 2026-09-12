@@ -215,7 +215,13 @@ export default function SeoAnalysis() {
               </div>
               <div style={{ backgroundColor: '#111827', color: 'white', padding: '16px 20px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <div style={{ width: '32px', height: '32px', backgroundColor: '#374151', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Zap size={16} color="#fbbf24" fill="#fbbf24" /></div>
-                <div style={{ fontSize: '14px', fontWeight: 500 }}>{results.fixes === 0 ? "Fully optimized — nothing left to fix." : `Solid start — ${results.fixes} fixes would move the needle, ${results.highImpactFixes} of them high-impact.`}</div>
+                <div style={{ fontSize: '14px', fontWeight: 500 }}>
+                  {results.fixes === 0 
+                    ? "Fully optimized — nothing left to fix." 
+                    : results.fixes === 1 
+                      ? "Strong setup — 1 fix left. Fix it below in one tap." 
+                      : `Solid start — ${results.fixes} fixes would move the needle, ${results.highImpactFixes} of them high-impact.`}
+                </div>
               </div>
               <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
@@ -233,7 +239,7 @@ export default function SeoAnalysis() {
               </div>
               <div>
                 {[
-                  { id: "title", title: "Title optimized", passed: results.checks.isTitleOptimized, impactLevel: 'HIGH', feedback: "Aim for 20-70 characters with the hook up front and minimal caps.", successMsg: "Length in range and readable.", buttonText: "Write better titles" },
+                  { id: "title", title: "Title optimized", passed: results.checks.isTitleOptimized, impactLevel: 'HIGH', feedback: "Aim for 20-70 characters with the hook up front and minimal caps.", successMsg: "Length in range and readable — fully visible on mobile with the hook up front.", buttonText: "Write better titles" },
                   { id: "desc", title: "Description optimized", passed: results.checks.isDescOptimized, impactLevel: 'HIGH', feedback: "Use 1-10 relevant hashtags — the first 3 show above your title. Past 15, YouTube ignores all of them.", successMsg: "Description looks good — keyword placement, hashtags and engagement are all in range.", buttonText: "Rewrite description" },
                   { id: "chapters", title: "Timestamp chapters", passed: results.checks.hasChapters, impactLevel: 'MED', feedback: "Add chapters starting at 0:00 (3 or more, 10s+ each) to unlock Key Moments on Google and make long videos easy to watch.", successMsg: "Chapters detected — Key Moments on Google and easier navigation are unlocked.", buttonText: "Generate chapters" },
                   { id: "thumbnail", title: "Custom HD thumbnail", passed: results.checks.hasHdThumbnail, impactLevel: 'LOW', feedback: "Upload a custom thumbnail in 1280x720 resolution.", successMsg: "Custom thumbnail detected. Want to know if it earns the click?", buttonText: "Upload thumbnail" },
@@ -249,6 +255,10 @@ export default function SeoAnalysis() {
                   <CheckItem key={item.id} {...item} />
                 ))}
               </div>
+              
+              <button style={{ width: '100%', marginTop: '24px', padding: '16px', backgroundColor: 'white', color: '#3b82f6', border: '1px solid #bfdbfe', borderRadius: '32px', fontSize: '16px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', transition: 'all 0.2s' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#eff6ff'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'white'; }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg> Share Video on Social Media 🚀
+              </button>
             </div>
           </div>
         </>

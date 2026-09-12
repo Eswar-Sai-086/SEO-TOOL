@@ -46,7 +46,7 @@ export default function SeoAnalysis() {
       
       const hasHdThumbnail = !!(snippet.thumbnails?.maxres || snippet.thumbnails?.high);
       const isHdVideo = videoData.contentDetails?.definition === 'hd';
-      const isTitleOptimized = title.length >= 85 && title.length <= 100;
+      const isTitleOptimized = title.length >= 20 && title.length <= 70;
       const hashtags = desc.match(/#\w+/g) || [];
       const isDescOptimized = desc.length >= 250 && hashtags.length >= 1 && hashtags.length <= 15;
       const hasChapters = desc.includes('0:00') || desc.includes('00:00');
@@ -91,11 +91,11 @@ export default function SeoAnalysis() {
     }
   };
 
-  const CheckItem = ({ id, title, passed, highImpact, feedback, successMsg, buttonText }) => (
+  const CheckItem = ({ id, title, passed, impactLevel, feedback, successMsg, buttonText }) => (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', padding: '24px 0', borderBottom: '1px solid var(--border-color)' }}>
       {passed ? (
         <CheckCircle2 size={28} color="#22c55e" fill="#dcfce7" style={{ marginTop: '2px', flexShrink: 0 }} />
-      ) : highImpact ? (
+      ) : impactLevel === 'HIGH' ? (
         <XCircle size={28} color="#ef4444" fill="#fee2e2" style={{ marginTop: '2px', flexShrink: 0 }} />
       ) : (
         <AlertTriangle size={28} color="#f97316" fill="#ffedd5" style={{ marginTop: '2px', flexShrink: 0 }} />
@@ -103,11 +103,11 @@ export default function SeoAnalysis() {
       
       <div style={{ flex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <h4 style={{ fontSize: '15px', fontWeight: 700, color: passed ? 'var(--text-main)' : highImpact ? '#ef4444' : '#f97316' }}>
+          <h4 style={{ fontSize: '15px', fontWeight: 700, color: passed ? 'var(--text-main)' : impactLevel === 'HIGH' ? '#ef4444' : '#f97316' }}>
             {title}
           </h4>
-          <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px', padding: '2px 8px', borderRadius: '12px', backgroundColor: passed ? '#dcfce7' : highImpact ? '#fee2e2' : '#ffedd5', color: passed ? '#15803d' : highImpact ? '#b91c1c' : '#c2410c' }}>
-            {passed ? 'PASSED' : highImpact ? 'HIGH' : 'MED'}
+          <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px', padding: '2px 8px', borderRadius: '12px', backgroundColor: passed ? '#dcfce7' : impactLevel === 'HIGH' ? '#fee2e2' : '#ffedd5', color: passed ? '#15803d' : impactLevel === 'HIGH' ? '#b91c1c' : '#c2410c' }}>
+            {passed ? 'PASSED' : impactLevel}
           </span>
         </div>
         <p style={{ fontSize: '14px', color: 'var(--text-muted)', lineHeight: '1.5', marginBottom: (!passed && buttonText && !generatedContent[id]) ? '12px' : '0' }}>
@@ -233,15 +233,16 @@ export default function SeoAnalysis() {
               </div>
               <div>
                 {[
-                  { id: "title", title: "Title optimized", passed: results.checks.isTitleOptimized, highImpact: true, feedback: "Aim for 85-100 characters with the hook up front and minimal caps.", successMsg: "Length in range and readable.", buttonText: "Write better titles" },
-                  { id: "desc", title: "Description optimized", passed: results.checks.isDescOptimized, highImpact: true, feedback: "Use 1-10 relevant hashtags — the first 3 show above your title. Past 15, YouTube ignores all of them.", successMsg: "Description looks good — keyword placement, hashtags and engagement are all in range.", buttonText: "Rewrite description" },
-                  { id: "chapters", title: "Timestamp chapters", passed: results.checks.hasChapters, highImpact: false, feedback: "Add chapters starting at 0:00 (3 or more, 10s+ each) to unlock Key Moments on Google and make long videos easy to watch.", successMsg: "Chapters detected — Key Moments on Google and easier navigation are unlocked.", buttonText: "Generate chapters" },
-                  { id: "thumbnail", title: "Custom HD thumbnail", passed: results.checks.hasHdThumbnail, highImpact: false, feedback: "Upload a custom thumbnail in 1280x720 resolution.", successMsg: "Custom thumbnail detected. Want to know if it earns the click?", buttonText: "Upload thumbnail" },
-                  { id: "hd", title: "HD video quality", passed: results.checks.isHdVideo, highImpact: false, feedback: "Upload in 1080p or higher.", successMsg: "Uploaded in HD — clear video keeps viewers around." },
-                  { id: "tags", title: "Tags added", passed: results.checks.hasTags, highImpact: false, feedback: "Add a handful of tags. They barely affect ranking, but they cover misspellings for free.", successMsg: "Tags barely affect ranking now — 30 seconds here is plenty. They mainly cover misspellings.", buttonText: "Suggest tags" }
+                  { id: "title", title: "Title optimized", passed: results.checks.isTitleOptimized, impactLevel: 'HIGH', feedback: "Aim for 20-70 characters with the hook up front and minimal caps.", successMsg: "Length in range and readable.", buttonText: "Write better titles" },
+                  { id: "desc", title: "Description optimized", passed: results.checks.isDescOptimized, impactLevel: 'HIGH', feedback: "Use 1-10 relevant hashtags — the first 3 show above your title. Past 15, YouTube ignores all of them.", successMsg: "Description looks good — keyword placement, hashtags and engagement are all in range.", buttonText: "Rewrite description" },
+                  { id: "chapters", title: "Timestamp chapters", passed: results.checks.hasChapters, impactLevel: 'MED', feedback: "Add chapters starting at 0:00 (3 or more, 10s+ each) to unlock Key Moments on Google and make long videos easy to watch.", successMsg: "Chapters detected — Key Moments on Google and easier navigation are unlocked.", buttonText: "Generate chapters" },
+                  { id: "thumbnail", title: "Custom HD thumbnail", passed: results.checks.hasHdThumbnail, impactLevel: 'LOW', feedback: "Upload a custom thumbnail in 1280x720 resolution.", successMsg: "Custom thumbnail detected. Want to know if it earns the click?", buttonText: "Upload thumbnail" },
+                  { id: "hd", title: "HD video quality", passed: results.checks.isHdVideo, impactLevel: 'LOW', feedback: "Upload in 1080p or higher.", successMsg: "Uploaded in HD — clear video keeps viewers around." },
+                  { id: "tags", title: "Tags added", passed: results.checks.hasTags, impactLevel: 'LOW', feedback: "Add a handful of tags. They barely affect ranking, but they cover misspellings for free.", successMsg: "Tags barely affect ranking now — 30 seconds here is plenty. They mainly cover misspellings.", buttonText: "Suggest tags" }
                 ].sort((a, b) => {
                   if (a.passed === b.passed) {
-                    return a.highImpact === b.highImpact ? 0 : a.highImpact ? -1 : 1;
+                    const weight = { 'HIGH': 3, 'MED': 2, 'LOW': 1 };
+                    return weight[b.impactLevel] - weight[a.impactLevel];
                   }
                   return a.passed ? 1 : -1;
                 }).map(item => (

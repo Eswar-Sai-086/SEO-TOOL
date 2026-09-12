@@ -125,12 +125,10 @@ Return ONLY the final description text exactly as requested. Do not include mark
   } else if (type === 'title') {
     prompt = `You are a viral YouTube SEO expert. Write EXACTLY ONE highly optimized, click-worthy YouTube title for a video currently titled "${videoData.title}".
 - You MUST output the title in the EXACT SAME LANGUAGE as the original video title.
-- Make the title VERY detailed and descriptive. It MUST be between 85 and 100 characters long to satisfy the user's specific length requirement.
-- Combine a strong curiosity-driven hook with a detailed explanation of the video's value (e.g., use a "Curiosity Hook | Detailed Explanation | Bonus Info" format).
-- Do NOT write short titles. Do NOT write just 3 or 4 words. Expand on the topic thoroughly.
+- Keep it under 70 characters.
 - Put the most interesting hook/keyword at the very beginning.
 - Use minimal caps.
-- Also provide a very short, concise 1-sentence explanation (in English) of why this title is highly optimized (e.g., "The new title clearly highlights the main topic and creates curiosity.").
+- Also provide a short 1-sentence explanation (in English) of why this title is highly optimized.
 - You MUST return the output in this EXACT format, with no markdown code blocks and no extra text:
 [The Optimized Title]|||[The 1-sentence explanation]`;
   } else if (type === 'chapters') {

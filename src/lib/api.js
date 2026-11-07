@@ -13,6 +13,20 @@ export const saveKeys = (youtube, gemini) => {
   localStorage.setItem('GEMINI_API_KEY', gemini);
 };
 
+// Use v1 endpoint — v1beta is deprecated for newer models
+const GEMINI_MODEL = 'gemini-1.5-flash';
+
+/**
+ * Returns a ready-to-use Gemini model instance using the v1 REST API.
+ * Falls back gracefully across model versions.
+ */
+function getGeminiModel(apiKey) {
+  const genAI = new GoogleGenerativeAI(apiKey, {
+    apiEndpoint: 'https://generativelanguage.googleapis.com/v1',
+  });
+  return genAI.getGenerativeModel({ model: GEMINI_MODEL });
+}
+
 // -----------------------------------------
 // YOUTUBE API METHODS
 // -----------------------------------------
@@ -98,9 +112,9 @@ export async function generateOptimization(type, videoData, extraDetails = '') {
     throw new Error("Gemini API Key is missing.");
   }
   
-  const genAI = new GoogleGenerativeAI(gemini);
-  const modelName = await getAvailableModel(gemini);
-  const model = genAI.getGenerativeModel({ model: modelName });
+  // using getGeminiModel
+  
+  const model = getGeminiModel(keys.gemini);
   
   let prompt = '';
   if (type === 'desc') {
@@ -164,9 +178,9 @@ export async function generateTitleFromTopic(topic, language, format) {
     throw new Error("Gemini API Key is missing. Please add it in Settings.");
   }
   
-  const genAI = new GoogleGenerativeAI(gemini);
-  const modelName = await getAvailableModel(gemini);
-  const model = genAI.getGenerativeModel({ model: modelName });
+  // using getGeminiModel
+  
+  const model = getGeminiModel(keys.gemini);
   
   const prompt = `You are a viral YouTube SEO expert. Generate 3 highly optimized, click-worthy YouTube titles for a ${format} about: "${topic}".
 - The titles MUST be in this exact language: ${language}.
@@ -207,9 +221,9 @@ export async function generateDescriptionFromTopic(topic, language, format) {
     throw new Error("Gemini API Key is missing. Please add it in Settings.");
   }
   
-  const genAI = new GoogleGenerativeAI(gemini);
-  const modelName = await getAvailableModel(gemini);
-  const model = genAI.getGenerativeModel({ model: modelName });
+  // using getGeminiModel
+  
+  const model = getGeminiModel(keys.gemini);
   
   const prompt = `You are a viral YouTube SEO expert. Write a highly optimized, high-converting YouTube description for a ${format} about: "${topic}".
   
@@ -239,9 +253,9 @@ export async function generateScript(topic, language, format, duration, videoTyp
     throw new Error("Gemini API Key is missing. Please add it in Settings.");
   }
   
-  const genAI = new GoogleGenerativeAI(gemini);
-  const modelName = await getAvailableModel(gemini);
-  const model = genAI.getGenerativeModel({ model: modelName });
+  // using getGeminiModel
+  
+  const model = getGeminiModel(keys.gemini);
   
   const prompt = `You are a viral YouTube scriptwriter. Write a highly engaging, fully structured video script for a ${format} about: "${topic}".
 - Duration target: ${duration}
@@ -309,9 +323,9 @@ export async function generateKeywords(topic, language) {
     throw new Error("Gemini API Key is missing. Please add it in Settings.");
   }
   
-  const genAI = new GoogleGenerativeAI(gemini);
-  const modelName = await getAvailableModel(gemini);
-  const model = genAI.getGenerativeModel({ model: modelName });
+  // using getGeminiModel
+  
+  const model = getGeminiModel(keys.gemini);
   
   const prompt = `
   You are an expert YouTube SEO analyst. 
@@ -347,9 +361,9 @@ export async function analyzeVideoSEO(title, description, tags) {
     throw new Error("Gemini API Key is missing. Please add it in Settings.");
   }
 
-  const genAI = new GoogleGenerativeAI(gemini);
-  const modelName = await getAvailableModel(gemini);
-  const model = genAI.getGenerativeModel({ model: modelName });
+  // using getGeminiModel
+  
+  const model = getGeminiModel(keys.gemini);
   
   const prompt = `
   You are an expert YouTube SEO auditor. Analyze the following video metadata:
@@ -391,9 +405,9 @@ export async function generateBestTimeToPost({ countries, mostlyOneCountry, time
     throw new Error("Gemini API Key is missing. Please add it in Settings.");
   }
   
-  const genAI = new GoogleGenerativeAI(keys.gemini);
-  const modelName = await getAvailableModel(keys.gemini);
-  const model = genAI.getGenerativeModel({ model: modelName });
+  // using getGeminiModel
+  
+  const model = getGeminiModel(keys.gemini);
 
   const countryInfo = countries.map(c => `${c.percentage}% from ${c.name}`).join(', ');
 

@@ -297,34 +297,9 @@ You MUST return the output EXACTLY in this format, with no other text:
   }
 }
 
-export async function getAvailableModel(geminiKey) {
-  // Priority list — try newest first. Skips any that return non-200.
-  const CANDIDATES = [
-    'gemini-3.8-flash',       // current recommended (Nov 2026+)
-    'gemini-2.5-flash',       // previous gen
-    'gemini-2.0-flash-exp',   // experimental but often available
-    'gemini-1.5-flash',       // stable fallback
-    'gemini-1.5-flash-8b',
-    'gemini-1.5-pro',
-  ];
-
-  for (const model of CANDIDATES) {
-    try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: 'hi' }] }] }),
-        }
-      );
-      // 200 means it works; 400 is a bad request but model IS available
-      if (res.status === 200 || res.status === 400) return model;
-    } catch {
-      // network error — try next
-    }
-  }
-
+export async function getAvailableModel(_geminiKey) {
+  // gemini-1.5-flash: free tier, stable, always available — no probing needed.
+  // Avoids the constant churn of newer models being deprecated or overloaded.
   return 'gemini-1.5-flash';
 }
 

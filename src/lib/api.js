@@ -298,21 +298,41 @@ You MUST return the output EXACTLY in this format, with no other text:
 }
 
 export async function getAvailableModel(geminiKey) {
+  // Priority list — newest/stable first, never use deprecated gemini-pro / gemini-1.0
+  const PREFERRED = [
+    'gemini-2.0-flash',
+    'gemini-2.0-flash-lite',
+    'gemini-1.5-flash',
+    'gemini-1.5-flash-8b',
+    'gemini-1.5-pro',
+  ];
+
   try {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${geminiKey}`);
     const data = await res.json();
-    if (!data.models) return "gemini-1.5-flash"; // fallback
-    
-    // Find the first model that supports generateContent and has 'gemini' in its name
-    const suitableModel = data.models.find(m => 
-      m.supportedGenerationMethods?.includes("generateContent") && 
-      m.name.includes("gemini") && 
-      !m.name.includes("vision")
+    if (!data.models) return 'gemini-1.5-flash';
+
+    const available = data.models
+      .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
+      .map(m => m.name.replace('models/', ''));
+
+    // Return the first preferred model that is actually available
+    for (const pref of PREFERRED) {
+      if (available.some(name => name === pref || name.startsWith(pref))) {
+        return pref;
+      }
+    }
+
+    // Last resort: any available model that isn't the old gemini-pro / gemini-1.0
+    const fallback = available.find(name =>
+      name.includes('gemini') &&
+      !name.includes('vision') &&
+      !name.match(/^gemini-pro$/) &&
+      !name.includes('gemini-1.0')
     );
-    
-    return suitableModel ? suitableModel.name.replace('models/', '') : "gemini-1.5-flash";
+    return fallback || 'gemini-1.5-flash';
   } catch (err) {
-    return "gemini-1.5-flash";
+    return 'gemini-1.5-flash';
   }
 }
 

@@ -298,11 +298,12 @@ You MUST return the output EXACTLY in this format, with no other text:
 }
 
 export async function getAvailableModel(geminiKey) {
-  // These are known-stable models in priority order.
-  // We try each one with a lightweight probe until one works.
+  // Priority list — try newest first. Skips any that return non-200.
   const CANDIDATES = [
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
+    'gemini-3.8-flash',       // current recommended (Nov 2026+)
+    'gemini-2.5-flash',       // previous gen
+    'gemini-2.0-flash-exp',   // experimental but often available
+    'gemini-1.5-flash',       // stable fallback
     'gemini-1.5-flash-8b',
     'gemini-1.5-pro',
   ];
@@ -310,15 +311,20 @@ export async function getAvailableModel(geminiKey) {
   for (const model of CANDIDATES) {
     try {
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}?key=${geminiKey}`
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: 'hi' }] }] }),
+        }
       );
-      if (res.ok) return model;
+      // 200 means it works; 400 is a bad request but model IS available
+      if (res.status === 200 || res.status === 400) return model;
     } catch {
-      // try next
+      // network error — try next
     }
   }
 
-  // Absolute fallback
   return 'gemini-1.5-flash';
 }
 

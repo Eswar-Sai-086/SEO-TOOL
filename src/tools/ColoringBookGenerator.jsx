@@ -49,37 +49,50 @@ export default function ColoringBookGenerator() {
       const modelName = await getAvailableModel(gemini);
       const model = genAI.getGenerativeModel({ model: modelName });
 
-      const prompt = `You are an expert coloring book illustrator and prompt writer.
-Generate exactly ${count} unique, detailed image prompts for a coloring book featuring "${category}" illustrations.
+      const prompt = `You are an expert KDP coloring book illustrator and AI image prompt writer.
+Generate exactly ${count} unique coloring book pages for "${category}" illustrations.
 Target age group: ${ageGroup}
 Drawing style: ${style}
+Theme: ${category}
+
+For EACH page, produce TWO prompts in this EXACT format with no deviation:
+
+PAGE 1
+TITLE: [Short descriptive name, e.g. "Baby Elephant"]
+THEME: [Theme & subtheme, e.g. "Safari & Jungle"]
+COLOR_GUIDE: [A detailed AI image generation prompt for a FULLY COLORED, vibrant, cartoon illustration of the scene. Include colors, mood, background details. End with: cartoon style, bright colors, child-friendly, high quality illustration]
+COLORING_PAGE: [A detailed AI image generation prompt for the EXACT SAME scene but as a black and white line art coloring page. Clean thick outlines, no shading, no fill. End with: black and white line art, coloring book page, thick outlines, no shading, white background, KDP ready]
+
+PAGE 2
+TITLE: ...
+(continue for all ${count} pages)
 
 Rules:
-- Each prompt describes ONE coloring book page scene
-- Keep descriptions clear, age-appropriate, and imaginative
-- Each prompt should be 1-2 sentences long
-- Include details about poses, backgrounds, and objects to draw
-- Prompts should be diverse — no repeated scenes
-- Format: Return ONLY a numbered list from 1 to ${count}, one prompt per line, no extra text
-
-Example format:
-1. A cute elephant splashing in a pond with lily pads and butterflies around it.
-2. ...
-
-Now generate ${count} prompts for "${category}" (${ageGroup}, ${style}):`;
+- Each PAGE must have all 4 fields: TITLE, THEME, COLOR_GUIDE, COLORING_PAGE
+- Scenes must be diverse — no repeated subjects
+- Keep everything age-appropriate for ${ageGroup}
+- Do NOT add any extra commentary, just the pages in the exact format above`;
 
       const result = await model.generateContent(prompt);
       const text = result.response.text();
 
-      // Parse numbered list
-      const lines = text
-        .split('\n')
-        .map((l) => l.trim())
-        .filter((l) => /^\d+[\.\)]\s/.test(l))
-        .map((l) => l.replace(/^\d+[\.\)]\s+/, '').trim());
+      // Parse paired prompts
+      const pageBlocks = text.split(/PAGE\s+\d+/i).filter(b => b.trim().length > 0);
+      const extract = (block, key) => {
+        const match = block.match(new RegExp(`${key}:\\s*([^\\n]+(?:\\n(?!TITLE:|THEME:|COLOR_GUIDE:|COLORING_PAGE:|PAGE\\s+\\d+)[^\\n]*)*)`, 'i'));
+        return match ? match[1].replace(/\n/g, ' ').trim() : '';
+      };
 
-      if (lines.length === 0) throw new Error('Could not parse prompts. Please try again.');
-      setPrompts(lines);
+      const parsed = pageBlocks.map((block, i) => ({
+        index: i + 1,
+        title: extract(block, 'TITLE'),
+        theme: extract(block, 'THEME'),
+        colorGuide: extract(block, 'COLOR_GUIDE'),
+        coloringPage: extract(block, 'COLORING_PAGE'),
+      })).filter(p => p.title || p.colorGuide);
+
+      if (parsed.length === 0) throw new Error('Could not parse prompts. Please try again.');
+      setPrompts(parsed);
     } catch (err) {
       setError(err.message || 'Failed to generate prompts.');
     } finally {
@@ -87,7 +100,10 @@ Now generate ${count} prompts for "${category}" (${ageGroup}, ${style}):`;
     }
   };
 
-  const getPlainText = () => prompts.map((p, i) => `${i + 1}. ${p}`).join('\n');
+  const getPlainText = () =>
+    prompts.map((p) =>
+      `PAGE ${p.index} — ${p.title}\nTheme: ${p.theme}\n\n[VISUAL COLOR GUIDE - KDP Left Page]\n${p.colorGuide}\n\n[COLOR ME! - KDP Right Page]\n${p.coloringPage}`
+    ).join('\n\n' + '─'.repeat(60) + '\n\n');
 
   const handleCopy = () => {
     navigator.clipboard.writeText(getPlainText());
@@ -420,61 +436,87 @@ Now generate ${count} prompts for "${category}" (${ageGroup}, ${style}):`;
             )}
 
             {prompts.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
                   <span style={{ fontSize: '13px', fontWeight: 700, color: '#3b82f6', letterSpacing: '0.5px' }}>
-                    {prompts.length} PROMPTS GENERATED
+                    {prompts.length} PAGES GENERATED
                   </span>
                   <span style={{ backgroundColor: '#eff6ff', color: '#3b82f6', borderRadius: '20px', padding: '2px 10px', fontSize: '12px', fontWeight: 600 }}>
                     {ageGroup} · {category}
                   </span>
                 </div>
-                {prompts.map((prompt, i) => (
+
+                {prompts.map((page) => (
                   <div
-                    key={i}
+                    key={page.index}
                     style={{
-                      display: 'flex',
-                      gap: '12px',
-                      padding: '14px 16px',
                       border: '1px solid var(--border-color)',
-                      borderRadius: '10px',
-                      backgroundColor: '#fafbff',
-                      alignItems: 'flex-start',
+                      borderRadius: '14px',
+                      overflow: 'hidden',
+                      backgroundColor: 'white',
                     }}
                   >
-                    <span
-                      style={{
-                        minWidth: '28px', height: '28px',
-                        backgroundColor: '#3b82f6', color: 'white',
-                        borderRadius: '50%',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '12px', fontWeight: 700, flexShrink: 0,
-                      }}
-                    >
-                      {i + 1}
-                    </span>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-main)', lineHeight: 1.6 }}>
-                        {prompt}
-                      </p>
+                    {/* Page header */}
+                    <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f8faff' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ width: '26px', height: '26px', backgroundColor: '#3b82f6', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>
+                          {page.index}
+                        </span>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text-main)' }}>{page.title || `Page ${page.index}`}</div>
+                          {page.theme && <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Theme: {page.theme}</div>}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => navigator.clipboard.writeText(
+                          `[VISUAL COLOR GUIDE]\n${page.colorGuide}\n\n[COLOR ME!]\n${page.coloringPage}`
+                        )}
+                        style={{ padding: '5px 10px', backgroundColor: 'white', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <Copy size={12} /> Copy Both
+                      </button>
                     </div>
-                    <button
-                      onClick={() => navigator.clipboard.writeText(prompt)}
-                      style={{
-                        padding: '6px 10px',
-                        backgroundColor: 'white',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: '8px',
-                        fontSize: '12px',
-                        cursor: 'pointer',
-                        color: 'var(--text-muted)',
-                        flexShrink: 0,
-                        display: 'flex', alignItems: 'center', gap: '4px',
-                      }}
-                      title="Copy this prompt"
-                    >
-                      <Copy size={12} /> Copy
-                    </button>
+
+                    {/* Two-column prompt area */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0' }}>
+                      {/* Left — Color Guide */}
+                      <div style={{ padding: '16px 18px', borderRight: '1px solid var(--border-color)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                          <span style={{ display: 'inline-block', backgroundColor: '#dbeafe', color: '#1d4ed8', fontSize: '10px', fontWeight: 800, padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.5px' }}>
+                            VISUAL COLOR GUIDE
+                          </span>
+                          <span style={{ fontSize: '10px', color: '#94a3b8' }}>KDP Left Page</span>
+                        </div>
+                        <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-main)', lineHeight: 1.65 }}>
+                          {page.colorGuide}
+                        </p>
+                        <button
+                          onClick={() => navigator.clipboard.writeText(page.colorGuide)}
+                          style={{ marginTop: '12px', padding: '5px 12px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}
+                        >
+                          <Copy size={11} /> Copy Prompt
+                        </button>
+                      </div>
+
+                      {/* Right — Coloring Page */}
+                      <div style={{ padding: '16px 18px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                          <span style={{ display: 'inline-block', backgroundColor: '#fef3c7', color: '#d97706', fontSize: '10px', fontWeight: 800, padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.5px' }}>
+                            COLOR ME!
+                          </span>
+                          <span style={{ fontSize: '10px', color: '#94a3b8' }}>KDP Right Page</span>
+                        </div>
+                        <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-main)', lineHeight: 1.65 }}>
+                          {page.coloringPage}
+                        </p>
+                        <button
+                          onClick={() => navigator.clipboard.writeText(page.coloringPage)}
+                          style={{ marginTop: '12px', padding: '5px 12px', backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', color: '#d97706', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}
+                        >
+                          <Copy size={11} /> Copy Prompt
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>

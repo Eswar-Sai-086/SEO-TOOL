@@ -1,5 +1,3 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
 // Helper to get keys from localStorage or fallback to .env
 export const getKeys = () => {
   return {
@@ -13,18 +11,61 @@ export const saveKeys = (youtube, gemini) => {
   localStorage.setItem('GEMINI_API_KEY', gemini);
 };
 
-// Use v1 endpoint — v1beta is deprecated for newer models
-const GEMINI_MODEL = 'gemini-1.5-flash';
+// -----------------------------------------
+// GEMINI DIRECT REST API (bypasses SDK)
+// -----------------------------------------
+export const GEMINI_CANDIDATES = [
+  'gemini-3.8-flash',
+  'gemini-2.5-flash',
+  'gemini-1.5-flash',
+  'gemini-2.0-flash',
+];
 
 /**
- * Returns a ready-to-use Gemini model instance using the v1 REST API.
- * Falls back gracefully across model versions.
+ * Calls Gemini generateContent via direct REST.
+ * Tries the recommended gemini-3.8-flash first, then falls back smoothly.
  */
-function getGeminiModel(apiKey) {
-  const genAI = new GoogleGenerativeAI(apiKey, {
-    apiEndpoint: 'https://generativelanguage.googleapis.com/v1',
-  });
-  return genAI.getGenerativeModel({ model: GEMINI_MODEL });
+export async function geminiGenerate(apiKey, prompt) {
+  let lastError = null;
+
+  for (const model of GEMINI_CANDIDATES) {
+    for (const apiVer of ['v1beta', 'v1']) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/${apiVer}/models/${model}:generateContent?key=${apiKey}`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.8, maxOutputTokens: 8192 },
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text) return text;
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          const msg = errData?.error?.message || `HTTP ${res.status}`;
+          lastError = new Error(`[Gemini ${res.status}] ${msg}`);
+          
+          // If auth or quota error, throw directly so user sees the key issue
+          if (res.status === 400 || res.status === 403) {
+            throw lastError;
+          }
+          // 404 (model not found) or 503 (high demand) -> continue to next candidate
+        }
+      } catch (e) {
+        if (e.message?.includes('Gemini 400') || e.message?.includes('Gemini 403')) {
+          throw e;
+        }
+        lastError = e;
+      }
+    }
+  }
+
+  throw lastError || new Error('Failed to generate content with Gemini.');
 }
 
 // -----------------------------------------
@@ -112,9 +153,6 @@ export async function generateOptimization(type, videoData, extraDetails = '') {
     throw new Error("Gemini API Key is missing.");
   }
   
-  // using getGeminiModel
-  
-  const model = getGeminiModel(keys.gemini);
   
   let prompt = '';
   if (type === 'desc') {
@@ -167,9 +205,8 @@ Return ONLY the final description text exactly as requested. Do not include mark
     prompt += `\n\nADDITIONAL INSTRUCTIONS FROM THE USER:\n"${extraDetails}"\nYou MUST incorporate these instructions into your generated output.`;
   }
 
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
-  return response.text().trim();
+  const text = await geminiGenerate(gemini, prompt);
+  return text.trim();
 }
 
 export async function generateTitleFromTopic(topic, language, format) {
@@ -178,9 +215,6 @@ export async function generateTitleFromTopic(topic, language, format) {
     throw new Error("Gemini API Key is missing. Please add it in Settings.");
   }
   
-  // using getGeminiModel
-  
-  const model = getGeminiModel(keys.gemini);
   
   const prompt = `You are a viral YouTube SEO expert. Generate 3 highly optimized, click-worthy YouTube titles for a ${format} about: "${topic}".
 - The titles MUST be in this exact language: ${language}.
@@ -203,9 +237,7 @@ The object MUST have this exact schema:
 }`;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    let text = response.text();
+    let text = await geminiGenerate(gemini, prompt);
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) text = jsonMatch[0];
     return JSON.parse(text);
@@ -221,9 +253,6 @@ export async function generateDescriptionFromTopic(topic, language, format) {
     throw new Error("Gemini API Key is missing. Please add it in Settings.");
   }
   
-  // using getGeminiModel
-  
-  const model = getGeminiModel(keys.gemini);
   
   const prompt = `You are a viral YouTube SEO expert. Write a highly optimized, high-converting YouTube description for a ${format} about: "${topic}".
   
@@ -239,9 +268,8 @@ You MUST follow this exact structure and formatting. The entire description MUST
 Return ONLY the final description text exactly as requested. Do not include markdown blocks or conversational text.`;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text().trim();
+    const text = await geminiGenerate(gemini, prompt);
+    return text.trim();
   } catch (err) {
     throw new Error("Failed to generate description.");
   }
@@ -253,9 +281,6 @@ export async function generateScript(topic, language, format, duration, videoTyp
     throw new Error("Gemini API Key is missing. Please add it in Settings.");
   }
   
-  // using getGeminiModel
-  
-  const model = getGeminiModel(keys.gemini);
   
   const prompt = `You are a viral YouTube scriptwriter. Write a highly engaging, fully structured video script for a ${format} about: "${topic}".
 - Duration target: ${duration}
@@ -281,9 +306,7 @@ You MUST return the output EXACTLY in this format, with no other text:
 [Full script text here]`;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    let text = response.text();
+    let text = await geminiGenerate(gemini, prompt);
     
     // Parse the delimited format
     const extract = (key, nextKey) => {
@@ -312,9 +335,7 @@ You MUST return the output EXACTLY in this format, with no other text:
 }
 
 export async function getAvailableModel(_geminiKey) {
-  // gemini-1.5-flash: free tier, stable, always available — no probing needed.
-  // Avoids the constant churn of newer models being deprecated or overloaded.
-  return 'gemini-1.5-flash';
+  return 'gemini-3.8-flash';
 }
 
 export async function generateKeywords(topic, language) {
@@ -323,9 +344,6 @@ export async function generateKeywords(topic, language) {
     throw new Error("Gemini API Key is missing. Please add it in Settings.");
   }
   
-  // using getGeminiModel
-  
-  const model = getGeminiModel(keys.gemini);
   
   const prompt = `
   You are an expert YouTube SEO analyst. 
@@ -341,9 +359,7 @@ export async function generateKeywords(topic, language) {
   `;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    let text = response.text();
+    let text = await geminiGenerate(gemini, prompt);
     
     const jsonMatch = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
     if (jsonMatch) text = jsonMatch[0];
@@ -361,9 +377,6 @@ export async function analyzeVideoSEO(title, description, tags) {
     throw new Error("Gemini API Key is missing. Please add it in Settings.");
   }
 
-  // using getGeminiModel
-  
-  const model = getGeminiModel(keys.gemini);
   
   const prompt = `
   You are an expert YouTube SEO auditor. Analyze the following video metadata:
@@ -385,9 +398,7 @@ export async function analyzeVideoSEO(title, description, tags) {
   `;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    let text = response.text();
+    let text = await geminiGenerate(gemini, prompt);
     
     const jsonMatch = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
     if (jsonMatch) text = jsonMatch[0];
@@ -405,9 +416,6 @@ export async function generateBestTimeToPost({ countries, mostlyOneCountry, time
     throw new Error("Gemini API Key is missing. Please add it in Settings.");
   }
   
-  // using getGeminiModel
-  
-  const model = getGeminiModel(keys.gemini);
 
   const countryInfo = countries.map(c => `${c.percentage}% from ${c.name}`).join(', ');
 
@@ -453,28 +461,52 @@ Friday: [Time range] - [Brief reason]
 Saturday: [Time range] - [Brief reason]
 Sunday: [Time range] - [Brief reason]`;
 
-  let parts = [{ text: prompt }];
-
-  if (images && images.length > 0) {
-    for (const img of images) {
-      const split = img.split(',');
-      if (split.length === 2) {
-        const mime = split[0].match(/:(.*?);/)[1];
-        const data = split[1];
-        parts.push({
-          inlineData: {
-            data: data,
-            mimeType: mime
-          }
-        });
-      }
-    }
-  }
-
   try {
-    const result = await model.generateContent(parts);
-    const response = await result.response;
-    const text = response.text();
+    // Build request body — text-only or multimodal
+    const contents = images && images.length > 0
+      ? [{
+          parts: [
+            { text: prompt },
+            ...images.map(img => {
+              const split = img.split(',');
+              const mime = split[0].match(/:(.*?);/)[1];
+              return { inlineData: { data: split[1], mimeType: mime } };
+            })
+          ]
+        }]
+      : [{ parts: [{ text: prompt }] }];
+
+    let text = '';
+    let lastError = null;
+
+    for (const model of GEMINI_CANDIDATES) {
+      for (const apiVer of ['v1beta', 'v1']) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/${apiVer}/models/${model}:generateContent?key=${keys.gemini}`;
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents, generationConfig: { temperature: 0.7, maxOutputTokens: 4096 } }),
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            if (text) break;
+          } else {
+            const errData = await res.json().catch(() => ({}));
+            lastError = new Error(errData?.error?.message || `HTTP ${res.status}`);
+            if (res.status === 400 || res.status === 403) throw lastError;
+          }
+        } catch (e) {
+          if (e.message?.includes('400') || e.message?.includes('403')) throw e;
+          lastError = e;
+        }
+      }
+      if (text) break;
+    }
+
+    if (!text && lastError) throw lastError;
     
     const extract = (key, nextKey) => {
       const start = text.indexOf(key);

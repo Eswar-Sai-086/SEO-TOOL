@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react';
 import { ChevronDown, Save, Copy, Download, BookOpen } from 'lucide-react';
-import { getKeys, getAvailableModel } from '../lib/api';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getKeys, geminiGenerate } from '../lib/api';
 
 const AGE_GROUPS = [
   '3-6 years',
@@ -45,10 +44,6 @@ export default function ColoringBookGenerator() {
       const { gemini } = getKeys();
       if (!gemini) throw new Error('Gemini API Key is missing. Please add it in Settings.');
 
-      const genAI = new GoogleGenerativeAI(gemini);
-      const modelName = await getAvailableModel(gemini);
-      const model = genAI.getGenerativeModel({ model: modelName });
-
       const prompt = `You are an expert KDP coloring book illustrator and AI image prompt writer.
 Generate exactly ${count} unique coloring book pages for "${category}" illustrations.
 Target age group: ${ageGroup}
@@ -73,8 +68,7 @@ Rules:
 - Keep everything age-appropriate for ${ageGroup}
 - Do NOT add any extra commentary, just the pages in the exact format above`;
 
-      const result = await model.generateContent(prompt);
-      const text = result.response.text();
+      const text = await geminiGenerate(gemini, prompt);
 
       // Parse paired prompts
       const pageBlocks = text.split(/PAGE\s+\d+/i).filter(b => b.trim().length > 0);

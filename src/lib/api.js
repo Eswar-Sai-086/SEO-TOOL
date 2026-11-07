@@ -298,42 +298,28 @@ You MUST return the output EXACTLY in this format, with no other text:
 }
 
 export async function getAvailableModel(geminiKey) {
-  // Priority list — newest/stable first, never use deprecated gemini-pro / gemini-1.0
-  const PREFERRED = [
+  // These are known-stable models in priority order.
+  // We try each one with a lightweight probe until one works.
+  const CANDIDATES = [
     'gemini-2.0-flash',
-    'gemini-2.0-flash-lite',
     'gemini-1.5-flash',
     'gemini-1.5-flash-8b',
     'gemini-1.5-pro',
   ];
 
-  try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${geminiKey}`);
-    const data = await res.json();
-    if (!data.models) return 'gemini-1.5-flash';
-
-    const available = data.models
-      .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
-      .map(m => m.name.replace('models/', ''));
-
-    // Return the first preferred model that is actually available
-    for (const pref of PREFERRED) {
-      if (available.some(name => name === pref || name.startsWith(pref))) {
-        return pref;
-      }
+  for (const model of CANDIDATES) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}?key=${geminiKey}`
+      );
+      if (res.ok) return model;
+    } catch {
+      // try next
     }
-
-    // Last resort: any available model that isn't the old gemini-pro / gemini-1.0
-    const fallback = available.find(name =>
-      name.includes('gemini') &&
-      !name.includes('vision') &&
-      !name.match(/^gemini-pro$/) &&
-      !name.includes('gemini-1.0')
-    );
-    return fallback || 'gemini-1.5-flash';
-  } catch (err) {
-    return 'gemini-1.5-flash';
   }
+
+  // Absolute fallback
+  return 'gemini-1.5-flash';
 }
 
 export async function generateKeywords(topic, language) {

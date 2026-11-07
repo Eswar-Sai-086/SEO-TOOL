@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { ChevronDown, Save, Copy, Download, BookOpen } from 'lucide-react';
-import { getKeys } from '../lib/api';
+import { getKeys, getAvailableModel } from '../lib/api';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const AGE_GROUPS = [
@@ -19,22 +19,6 @@ const STYLE_OPTIONS = [
   'Realistic Scenes',
 ];
 
-async function getAvailableModel(apiKey) {
-  try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
-    );
-    const data = await res.json();
-    const models = data.models || [];
-    if (models.some((m) => m.name.includes('gemini-1.5-pro')))
-      return 'gemini-1.5-pro';
-    if (models.some((m) => m.name.includes('gemini-1.5-flash')))
-      return 'gemini-1.5-flash';
-    return 'gemini-pro';
-  } catch {
-    return 'gemini-1.5-flash';
-  }
-}
 
 export default function ColoringBookGenerator() {
   const [category, setCategory] = useState('');

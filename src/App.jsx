@@ -4,7 +4,8 @@ import {
   Type, FileText, Clapperboard, Megaphone,
   Magnet, Lightbulb, Wand2,
   BarChart2, Image as ImageIcon, Target, Clock, Scan,
-  Globe, Moon, PlaySquare, Settings as SettingsIcon
+  Globe, Moon, PlaySquare, Settings as SettingsIcon,
+  Palette
 } from 'lucide-react';
 
 import KeywordGenerator from './tools/KeywordGenerator';
@@ -14,6 +15,7 @@ import TitleGenerator from './tools/TitleGenerator';
 import DescriptionWriter from './tools/DescriptionWriter';
 import ScriptBuilder from './tools/ScriptBuilder';
 import BestTimeToPost from './tools/BestTimeToPost';
+import ColoringBookGenerator from './tools/ColoringBookGenerator';
 import Settings from './pages/Settings';
 
 function App() {
@@ -107,6 +109,13 @@ function App() {
           <NavLink to="/content-extractor" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <Scan size={18} /> Content Extractor
           </NavLink>
+
+          <div className="nav-section-title" style={{ marginTop: '8px' }}>CREATIVE TOOLS</div>
+
+          <NavLink to="/coloring-book" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Palette size={18} /> Coloring Book Prompts</div>
+            <span style={{ backgroundColor: '#10b981', color: 'white', fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>New</span>
+          </NavLink>
         </nav>
       </aside>
       
@@ -132,6 +141,7 @@ function App() {
           <Route path="/description-writer" element={<DescriptionWriter />} />
           <Route path="/script-builder" element={<ScriptBuilder />} />
           <Route path="/best-time" element={<BestTimeToPost />} />
+          <Route path="/coloring-book" element={<ColoringBookGenerator />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={
             <div style={{ padding: '0 48px' }}>
